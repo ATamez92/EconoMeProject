@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import econome.model.Needs;
+import econome.model.Wants;
 import econome.model.Profile;
 import econome.logic.BudgetManager;
 
@@ -29,30 +30,42 @@ public class ConsoleUI {
 	        // Main loop — Needs list demo (add/view/mark complete/exit)
 	        boolean running = true;
 	        while (running) {
-	            System.out.println("\n==== Needs Menu ====");
-	            System.out.println("1) Add Need");
-	            System.out.println("2) View Needs");
-	            System.out.println("3) Mark Need Complete");
-	            System.out.println("4) Exit");
+	        	System.out.println("\n==== Main Menu ====");
+	        	System.out.println("1) Add Need");
+	        	System.out.println("2) View Needs");
+	        	System.out.println("3) Mark Need Complete");
+	        	System.out.println("4) Add Want");
+	        	System.out.println("5) View Wants");
+	        	System.out.println("6) Mark Want Complete");
+	        	System.out.println("7) Exit");
 	            System.out.print("Choose an option: ");
 
 	            String choice = scanner.nextLine().trim();
 	            switch (choice) {
-	                case "1":
-	                    addNeed(profile);
-	                    break;
-	                case "2":
-	                    viewNeeds(profile);
-	                    break;
-	                case "3":
-	                    markNeedComplete(profile);
-	                    break;
-	                case "4":
-	                    running = false;
-	                    break;
-	                default:
-	                    System.out.println("Invalid option. Try 1-4.");
-	            }
+	            case "1":
+	                addNeed(profile);
+	                break;
+	            case "2":
+	                viewNeeds(profile);
+	                break;
+	            case "3":
+	                markNeedComplete(profile);
+	                break;
+	            case "4":
+	                addWant(profile);
+	                break;
+	            case "5":
+	                viewWants(profile);
+	                break;
+	            case "6":
+	                markWantComplete(profile);
+	                break;
+	            case "7":
+	                running = false;
+	                break;
+	            default:
+	                System.out.println("Invalid option. Try 1-7.");
+	        }
 	        }
 
 	        System.out.println("Goodbye!");
@@ -100,6 +113,48 @@ public class ConsoleUI {
 	        Needs n = needs.get(idx - 1);
 	        n.markComplete();
 	        System.out.println("Marked complete: " + n.getDescription());
+	    }
+	    
+	    private void addWant(Profile profile) {
+	        System.out.print("Enter want description: ");
+	        String desc = scanner.nextLine().trim();
+
+	        double cost = promptDouble("Enter cost (e.g., 500.00): ");
+
+	        LocalDate dueDate = promptDate("Enter target date (YYYY-MM-DD): ");
+
+	        Wants want = new Wants(desc, cost, dueDate);
+	        profile.addWant(want);
+	        System.out.println("Added want: " + desc + " | $" + cost + " | Target " + dueDate);
+	    }
+
+	    private void viewWants(Profile profile) {
+	        List<Wants> wants = profile.getWantsList();
+	        if (wants.isEmpty()) {
+	            System.out.println("(No wants yet)");
+	            return;
+	        }
+	        System.out.println("\n# | Description               | Cost      | Target Date | Complete");
+	        System.out.println("---+---------------------------+-----------+-------------+---------");
+	        for (int i = 0; i < wants.size(); i++) {
+	            Wants w = wants.get(i);
+	            System.out.printf("%2d | %-25s | $%8.2f | %11s | %s%n",
+	                    i + 1, w.getDescription(), w.getCost(), w.getDueDate(), w.isComplete());
+	        }
+	    }
+
+	    private void markWantComplete(Profile profile) {
+	        List<Wants> wants = profile.getWantsList();
+	        if (wants.isEmpty()) {
+	            System.out.println("(No wants to mark complete)");
+	            return;
+	        }
+
+	        viewWants(profile);
+	        int idx = promptInt("Enter # to mark complete: ", 1, wants.size());
+	        Wants w = wants.get(idx - 1);
+	        w.markComplete();
+	        System.out.println("Marked complete: " + w.getDescription());
 	    }
 
 	    private double promptDouble(String prompt) {
