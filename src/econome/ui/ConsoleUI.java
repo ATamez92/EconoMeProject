@@ -12,6 +12,7 @@ import econome.logic.BudgetManager;
 
 public class ConsoleUI {
 	 private final Scanner scanner = new Scanner(System.in);
+	 private final BudgetManager budgetManager = new BudgetManager();
 
 	    public void start() {
 	        System.out.println("Welcome to EconoMe!");
@@ -37,7 +38,9 @@ public class ConsoleUI {
 	        	System.out.println("4) Add Want");
 	        	System.out.println("5) View Wants");
 	        	System.out.println("6) Mark Want Complete");
-	        	System.out.println("7) Exit");
+	        	System.out.println("7) Change Funds Allocation");
+	        	System.out.println("8) Show Current Allocation");
+	        	System.out.println("9) Exit");
 	            System.out.print("Choose an option: ");
 
 	            String choice = scanner.nextLine().trim();
@@ -61,10 +64,16 @@ public class ConsoleUI {
 	                markWantComplete(profile);
 	                break;
 	            case "7":
+	                changeFundsAllocation(profile);
+	                break;
+	            case "8":
+	            	showAllocations(profile);
+	            	break;
+	            case "9":
 	                running = false;
 	                break;
 	            default:
-	                System.out.println("Invalid option. Try 1-7.");
+	                System.out.println("Invalid option. Try 1-9.");
 	        }
 	        }
 
@@ -155,6 +164,47 @@ public class ConsoleUI {
 	        Wants w = wants.get(idx - 1);
 	        w.markComplete();
 	        System.out.println("Marked complete: " + w.getDescription());
+	    }
+	    
+	    private void changeFundsAllocation(Profile profile) {
+	        System.out.println("\nChange Funds Allocation");
+	        System.out.println("1) Use Percentages (e.g., 50/30/20)");
+	        System.out.println("2) Use Fixed Amounts (e.g., $1000, $500, $200)");
+	        System.out.print("Choose option: ");
+	        String choice = scanner.nextLine();
+
+	        boolean byPercentage = choice.equals("1");
+
+	        double needs = promptDouble("Enter allocation for Needs (" + (byPercentage ? "%" : "$") + "): ");
+	        double wants = promptDouble("Enter allocation for Wants (" + (byPercentage ? "%" : "$") + "): ");
+	        double savings = promptDouble("Enter allocation for Savings (" + (byPercentage ? "%" : "$") + "): ");
+
+	        profile.setAllocations(needs, wants, savings, byPercentage);
+	        System.out.println("Allocations updated successfully!");
+	    }
+	    
+	    private void showAllocations(Profile profile) {
+	        System.out.println("\nCurrent Allocations:");
+	        if (profile.getNeedsAllocation() == 0 &&
+	            profile.getWantsAllocation() == 0 &&
+	            profile.getSavingsAllocation() == 0) {
+	            System.out.println("(No allocations set yet)");
+	            return;
+	        }
+
+	        if (profile.isAllocationByPercentage()) {
+	            System.out.printf("Needs: %.2f%% (%.2f)%n", profile.getNeedsAllocation(),
+	                              budgetManager.calculateNeeds(profile));
+	            System.out.printf("Wants: %.2f%% (%.2f)%n", profile.getWantsAllocation(),
+	                              budgetManager.calculateWants(profile));
+	            System.out.printf("Savings: %.2f%% (%.2f)%n", profile.getSavingsAllocation(),
+	                              budgetManager.previewSavings(profile));
+	        } else {
+	            System.out.printf("Needs: $%.2f%n", profile.getNeedsAllocation());
+	            System.out.printf("Wants: $%.2f%n", profile.getWantsAllocation());
+	            System.out.printf("Savings: $%.2f (Balance: %.2f)%n",
+	                              profile.getSavingsAllocation(), profile.getSavingsBalance());
+	        }
 	    }
 
 	    private double promptDouble(String prompt) {
