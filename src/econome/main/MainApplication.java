@@ -1,5 +1,5 @@
 package econome.main;
-
+//Test comment.
 import econome.model.Profile;
 import econome.logic.BudgetManager;
 
