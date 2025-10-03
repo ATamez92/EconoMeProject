@@ -4,20 +4,16 @@ import econome.model.Profile;
 
 public class BudgetManager {
 	
-	private double needs;
-    private double wants;
-    private double savings;
-
-    public void calculateBudget(Profile profile) {
-        double income = profile.getIncome();
-        this.needs = income * 0.50;   // 50% Needs
-        this.wants = income * 0.30;   // 30% Wants
-        this.savings = income * 0.20; // 20% Savings
+	 // Splits income into Needs/Wants/Savings (logic to be added later)
+    public double calculateNeeds(Profile profile) {
+        return 0.0; // placeholder
     }
 
-    public void printBudget() {
-        System.out.println("Needs: $" + needs);
-        System.out.println("Wants: $" + wants);
-        System.out.println("Savings: $" + savings);
+    public double calculateWants(Profile profile) {
+        return 0.0; // placeholder
+    }
+
+    public double calculateSavings(Profile profile) {
+        return 0.0; // placeholder
     }
 }

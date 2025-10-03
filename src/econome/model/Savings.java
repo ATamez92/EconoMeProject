@@ -1,28 +1,12 @@
 package econome.model;
 
 public class Savings {
-	private double amount;
+	 private double balance;
 
-	public Savings(double initialAmount) {
-		this.amount = initialAmount;
-	}
+	    public Savings(double balance) {
+	        this.balance = balance;
+	    }
 
-	public double getAmount() {
-		return amount;
+	    public double getBalance() { return balance; }
+	    public void setBalance(double balance) { this.balance = balance; }
 	}
-
-	public void deposit(double amount) {
-		if (amount > 0) {
-			this.amount += amount;
-		}
-	}
-
-	public boolean withdraw(double amount) {
-		if (amount > 0 && amount <= this.amount) {
-			this.amount -= amount;
-			return true;
-		}
-		return false;
-	}
-	
-}
