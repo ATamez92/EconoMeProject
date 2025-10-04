@@ -24,7 +24,27 @@ public class Projector {
      * @param monthlyContribution how much the user plans to contribute each month
      * @return estimated months required to reach the goal (currently always 0)
      */
-    public int estimateGoalTimeline(Wants want, Profile profile, double monthlyContribution) {
-        return 0; // placeholder until logic is implemented
+  public int estimateGoalTimeline(Wants want, Profile profile, double monthlyContribution) {
+        double goalCost = want.getCost();
+        double currentSavings = profile.getSavingsBalance();
+        double remainingAmount = goalCost - currentSavings;
+
+        // Edge cases
+        if (goalCost <= 0) {
+        	// No cost, no time needed
+            return 0; 
+        }
+     // Already have enough savings
+        if (remainingAmount <= 0) {
+            return 0; 
+        }
+     // Cannot reach goal with zero/negative contribution
+        if (monthlyContribution <= 0) {
+            return -1; 
+        }
+
+        // Calculate months needed (round up to nearest whole month)
+        int months = (int) Math.ceil(remainingAmount / monthlyContribution);
+        return months;
     }
 }
