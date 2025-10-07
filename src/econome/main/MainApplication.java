@@ -1,24 +1,18 @@
 package econome.main;
 
-import econome.ui.ConsoleUI;
+import javax.swing.SwingUtilities;
+import econome.ui.SplashScreenUI;
 
 /**
  * Main entry point for the EconoMe application.
  * 
- * Responsibilities:
- * - Launches the console-based user interface.
- * - Serves as the starting class when the program is executed.
+ * Launches the splash screen (profile selector / creator),
+ * which then loads the main dashboard when a profile is chosen.
  */
 public class MainApplication {
 
-    /**
-     * Program entry point.
-     * Initializes the ConsoleUI and starts the application.
-     *
-     * @param args command-line arguments (not used)
-     */
     public static void main(String[] args) {
-        ConsoleUI ui = new ConsoleUI();
-        ui.start();
+        // Launch the splash screen on the Swing event dispatch thread
+        SwingUtilities.invokeLater(() -> new SplashScreenUI());
     }
 }
