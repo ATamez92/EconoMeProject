@@ -238,7 +238,4 @@ public class SharedUI {
         bottomWrapper.add(createNavigationBar(parent, navActions), BorderLayout.SOUTH);
         return bottomWrapper;
     }
-
-
 }
-

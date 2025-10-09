@@ -31,26 +31,25 @@ public class NeedsUI {
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         dialog.add(contentPanel, BorderLayout.CENTER);
 
-     // --- Add Need button ---
+        // --- Add Need button ---
         JButton addButton = SharedUI.createRoundedButton("➕ Add Need",
                 new Color(102, 187, 106), Color.WHITE); // Light green to match Home Needs
         addButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
         addButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addButton.addActionListener(e ->
-            parent.showAddNeedDialog(() -> refreshNeedsContent(dialog, contentPanel))
+                parent.showAddNeedDialog(() -> refreshNeedsContent(dialog, contentPanel))
         );
-
 
         // --- Bottom section (Add button + Navigation bar) ---
         JPanel bottom = SharedUI.createBottomSection(
-            dialog,
-            addButton,
-            new Runnable[] {
-                () -> new NeedsUI(profile, parent),
-                () -> new WantsUI(profile, parent),
-                () -> parent.showSavingsMenu(),
-                () -> parent.showSettingsMenu()
-            }
+                dialog,
+                addButton,
+                new Runnable[]{
+                        () -> new NeedsUI(profile, parent),
+                        () -> new WantsUI(profile, parent),
+                        () -> parent.showSavingsMenu(),
+                        () -> parent.showSettingsMenu()
+                }
         );
         dialog.add(bottom, BorderLayout.SOUTH);
 
@@ -89,7 +88,11 @@ public class NeedsUI {
                 card.setMaximumSize(new Dimension(320, cardHeight));
                 card.setMinimumSize(new Dimension(320, cardHeight));
 
-                // --- Info section (left side) ---
+                // --- Info section (LEFT: vertically centered, left-aligned) ---
+                JPanel textPanel = new JPanel();
+                textPanel.setOpaque(false);
+                textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+
                 JLabel desc = new JLabel("• " + n.getDescription());
                 desc.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 13f));
 
@@ -100,39 +103,83 @@ public class NeedsUI {
                 date.setFont(UITheme.BODY_FONT.deriveFont(11f));
                 date.setForeground(Color.DARK_GRAY);
 
-                JPanel infoPanel = new JPanel();
-                infoPanel.setOpaque(false);
-                infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-                infoPanel.add(desc);
-                infoPanel.add(cost);
-                infoPanel.add(date);
+                textPanel.add(desc);
+                textPanel.add(cost);
+                textPanel.add(date);
 
-                // --- Right side: Mark Complete button ---
-                JPanel rightPanel = new JPanel(new BorderLayout());
+                JPanel infoPanel = new JPanel(new GridBagLayout());
+                infoPanel.setOpaque(false);
+                infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0)); // small left padding
+
+                GridBagConstraints gbcInfo = new GridBagConstraints();
+                gbcInfo.gridx = 0;
+                gbcInfo.gridy = 0;
+                gbcInfo.weightx = 1.0;
+                gbcInfo.weighty = 1.0;
+                gbcInfo.fill = GridBagConstraints.NONE;
+                gbcInfo.anchor = GridBagConstraints.WEST; // left side, vertically centered
+                infoPanel.add(textPanel, gbcInfo);
+
+                // --- Right side: Buttons ---
+                JPanel rightPanel = new JPanel(new GridBagLayout());
                 rightPanel.setOpaque(false);
-                rightPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10)); // right aligned
+                rightPanel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 10));
+
+                JPanel buttonsPanel = new JPanel();
+                buttonsPanel.setOpaque(false);
+                buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+
+                Dimension buttonSize = new Dimension(110, 29);
 
                 JButton completeBtn = SharedUI.createRoundedButton(
-                    n.isComplete() ? "✓ Done" : "Mark Complete",
-                    UITheme.PRIMARY_LIGHT,
-                    Color.WHITE
+                        n.isComplete() ? "✓ Done" : "Mark Complete",
+                        n.isComplete() ? new Color(180, 180, 180) : UITheme.PRIMARY_LIGHT,
+                        Color.WHITE
                 );
                 completeBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 11f));
                 completeBtn.setEnabled(!n.isComplete());
                 completeBtn.setFocusPainted(false);
-                completeBtn.setPreferredSize(new Dimension(110, 32));
+                completeBtn.setPreferredSize(buttonSize);
+                completeBtn.setMaximumSize(buttonSize);
+                completeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 completeBtn.addActionListener(e -> {
                     n.markComplete();
                     refreshNeedsContent(dialog, contentPanel);
                 });
 
-                JPanel btnWrapper = new JPanel(new GridBagLayout());
-                btnWrapper.setOpaque(false);
-                btnWrapper.setPreferredSize(new Dimension(120, 40)); // 🔹 adjust here to control button height
-                btnWrapper.add(completeBtn);
+                JButton deleteBtn = SharedUI.createRoundedButton(
+                        "🗑 Delete",
+                        new Color(200, 80, 80),
+                        Color.WHITE
+                );
+                deleteBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 11f));
+                deleteBtn.setFocusPainted(false);
+                deleteBtn.setPreferredSize(buttonSize);
+                deleteBtn.setMaximumSize(buttonSize);
+                deleteBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+                deleteBtn.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(
+                            dialog,
+                            "Delete \"" + n.getDescription() + "\"?",
+                            "Confirm Delete",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        profile.removeNeed(n);
+                        refreshNeedsContent(dialog, contentPanel);
+                    }
+                });
 
-                rightPanel.add(btnWrapper, BorderLayout.EAST);
+                buttonsPanel.add(completeBtn);
+                buttonsPanel.add(Box.createRigidArea(new Dimension(0, 6)));
+                buttonsPanel.add(deleteBtn);
 
+                GridBagConstraints gbcRight = new GridBagConstraints();
+                gbcRight.gridx = 0;
+                gbcRight.gridy = 0;
+                gbcRight.anchor = GridBagConstraints.CENTER;
+                rightPanel.add(buttonsPanel, gbcRight);
 
                 // --- Assemble card ---
                 card.add(infoPanel, BorderLayout.CENTER);
@@ -150,7 +197,7 @@ public class NeedsUI {
             scroll.setOpaque(false);
             scroll.getViewport().setOpaque(false);
             scroll.getVerticalScrollBar().setUnitIncrement(16);
-            scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); // ✅ removes horizontal bar
+            scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
             contentPanel.add(scroll, BorderLayout.CENTER);
         }

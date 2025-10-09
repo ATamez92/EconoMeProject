@@ -41,7 +41,7 @@ public class TasksUI {
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); // ✅ disable horizontal scroll
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         dialog.add(scrollPane, BorderLayout.CENTER);
 
         // --- Bottom Navigation Bar ---
@@ -72,7 +72,6 @@ public class TasksUI {
             card.setLayout(new BorderLayout(10, 0));
             card.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
-            // ✅ Match width with Needs/Wants pages
             card.setPreferredSize(new Dimension(300, 90));
             card.setMaximumSize(new Dimension(300, 90));
             card.setMinimumSize(new Dimension(300, 90));
@@ -94,10 +93,10 @@ public class TasksUI {
                 complete = w.isComplete();
             } else continue;
 
-            // --- Left info panel ---
-            JPanel infoPanel = new JPanel();
-            infoPanel.setOpaque(false);
-            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+            // --- LEFT text section (vertically centered, left aligned) ---
+            JPanel textPanel = new JPanel();
+            textPanel.setOpaque(false);
+            textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
 
             JLabel descLabel = new JLabel(desc);
             descLabel.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 14f));
@@ -109,43 +108,56 @@ public class TasksUI {
             dateLabel.setFont(UITheme.BODY_FONT.deriveFont(12f));
             dateLabel.setForeground(Color.DARK_GRAY);
 
-            infoPanel.add(descLabel);
-            infoPanel.add(costLabel);
-            infoPanel.add(dateLabel);
+            textPanel.add(descLabel);
+            textPanel.add(costLabel);
+            textPanel.add(dateLabel);
 
-            // --- Right panel (tag + button) ---
+            JPanel infoPanel = new JPanel(new GridBagLayout());
+            infoPanel.setOpaque(false);
+            infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+
+            GridBagConstraints gbcInfo = new GridBagConstraints();
+            gbcInfo.gridx = 0;
+            gbcInfo.gridy = 0;
+            gbcInfo.weightx = 1.0;
+            gbcInfo.weighty = 1.0;
+            gbcInfo.fill = GridBagConstraints.NONE;
+            gbcInfo.anchor = GridBagConstraints.WEST;
+            infoPanel.add(textPanel, gbcInfo);
+
+            // --- RIGHT side: tag (top-right) + complete button (bottom-right) ---
             JPanel rightPanel = new JPanel(new BorderLayout());
             rightPanel.setOpaque(false);
 
-            // ✅ Rounded Need/Want tag — top-right corner
+            // Tag at top-right
             JLabel tag = new JLabel(typeLabel, SwingConstants.CENTER);
             tag.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 11f));
             tag.setForeground(Color.WHITE);
             tag.setOpaque(true);
             tag.setBackground(tagColor);
             tag.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
-            tag.putClientProperty("JComponent.roundRect", true);
 
             JPanel tagWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
             tagWrap.setOpaque(false);
             tagWrap.add(tag);
             rightPanel.add(tagWrap, BorderLayout.NORTH);
 
-            // ✅ Rounded Complete button — same size as Needs/Wants pages
+            // Complete button at bottom-right
             JButton completeBtn = SharedUI.createRoundedButton(
                     complete ? "✓ Done" : "Complete",
-                    UITheme.PRIMARY_LIGHT,
+                    complete ? new Color(180, 180, 180) : UITheme.PRIMARY_LIGHT,
                     Color.WHITE
             );
             completeBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 11f));
             completeBtn.setFocusPainted(false);
             completeBtn.setEnabled(!complete);
-            completeBtn.setPreferredSize(new Dimension(120, 40)); // same as Mark Complete
+            completeBtn.setPreferredSize(new Dimension(120, 32));
             completeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             completeBtn.addActionListener(e -> {
                 if (obj instanceof Needs n) n.markComplete();
                 else if (obj instanceof Wants w) w.markComplete();
+
                 parentPanel.removeAll();
                 addTasksToPanel(parentPanel, profile.getNeedsList(), "Need", new Color(102, 187, 106));
                 addTasksToPanel(parentPanel, profile.getWantsList(), "Want", new Color(66, 165, 245));
@@ -158,6 +170,7 @@ public class TasksUI {
             buttonWrap.add(completeBtn);
             rightPanel.add(buttonWrap, BorderLayout.SOUTH);
 
+            // --- Assemble card ---
             card.add(infoPanel, BorderLayout.CENTER);
             card.add(rightPanel, BorderLayout.EAST);
 

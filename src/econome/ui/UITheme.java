@@ -17,7 +17,7 @@ public class UITheme {
     public static final Color PRIMARY_LIGHT   = new Color(102, 187, 106);
     public static final Color ACCENT          = new Color(165, 214, 167);
 
-    public static final Font  TITLE_FONT      = new Font("Segoe UI", Font.BOLD, 22);
-    public static final Font  SUBTITLE_FONT   = new Font("Segoe UI", Font.PLAIN, 16);
-    public static final Font  BODY_FONT       = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font  TITLE_FONT      = new Font("SansSerif", Font.BOLD, 22);
+    public static final Font  SUBTITLE_FONT   = new Font("SansSerif", Font.PLAIN, 16);
+    public static final Font  BODY_FONT       = new Font("SansSerif", Font.PLAIN, 14);
 }

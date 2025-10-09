@@ -2,20 +2,20 @@ package econome.ui;
 
 import econome.logic.ProfileManager;
 import econome.model.Profile;
-import econome.ui.UITheme;
-
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 
 /**
  * Entry screen for EconoMe.
- * Allows users to select, create, or load a saved profile.
+ * Allows users to select, create, load, or delete a saved profile.
  */
 public class SplashScreenUI extends JFrame {
-	private static final long serialVersionUID = 1L; // added to prevent serialization warning
-	
+    private static final long serialVersionUID = 1L;
+
     private final ProfileManager profileManager;
     private JComboBox<Profile> profileDropdown;
+    private JButton deleteButton;
 
     public SplashScreenUI() {
         super("Welcome to EconoMe");
@@ -38,42 +38,101 @@ public class SplashScreenUI extends JFrame {
         headerPanel.add(subtitle);
         add(headerPanel, BorderLayout.NORTH);
 
-        // --- Center Panel ---
+     // --- Center Panel ---
         JPanel centerPanel = new JPanel();
         centerPanel.setOpaque(false);
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
 
         if (profileManager.getProfiles().isEmpty()) {
-            // No profiles yet — show "Create Profile" button
-            JButton createButton = createStyledButton("Create Profile", new Color(67, 160, 71)); // soft green
+            // No profiles yet — show "Create Profile" button only
+            JButton createButton = SharedUI.createRoundedButton("➕ Create Profile",
+                    new Color(102, 187, 106), Color.WHITE);
+            createButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
+            createButton.setAlignmentX(Component.CENTER_ALIGNMENT);
             createButton.addActionListener(e -> createProfile());
+
+            Dimension buttonSize = new Dimension(220, 45);
+            createButton.setPreferredSize(buttonSize);
+            createButton.setMaximumSize(buttonSize);
+            createButton.setMinimumSize(buttonSize);
+
             centerPanel.add(Box.createVerticalGlue());
             centerPanel.add(createButton);
             centerPanel.add(Box.createVerticalGlue());
+
         } else {
-            // Profiles exist — show dropdown and actions
+            // Profiles exist — show dropdown and action buttons
             JLabel chooseLabel = new JLabel("Select a profile:");
             chooseLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            chooseLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            chooseLabel.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 14f));
             chooseLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
             profileDropdown = new JComboBox<>(profileManager.getProfiles().toArray(new Profile[0]));
-            profileDropdown.setMaximumSize(new Dimension(300, 35));
+            profileDropdown.setFont(UITheme.BODY_FONT);
+            profileDropdown.setForeground(Color.DARK_GRAY);
+            profileDropdown.setBackground(Color.WHITE);
+            profileDropdown.setFocusable(false);
+            profileDropdown.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            profileDropdown.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
 
-            JButton loadButton = createStyledButton("Load Profile", new Color(67, 160, 71));
+            // ✅ Modern rounded dropdown style (Option 2)
+            profileDropdown.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+                @Override
+                public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 20, 20);
+                    g2.setColor(new Color(200, 200, 200)); // soft gray border
+                    g2.drawRoundRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1, 20, 20);
+                    g2.dispose();
+                }
+            });
+
+            // Match dropdown width with buttons
+            Dimension buttonSize = new Dimension(220, 45);
+            profileDropdown.setMaximumSize(buttonSize);
+            profileDropdown.setPreferredSize(buttonSize);
+            profileDropdown.setMinimumSize(buttonSize);
+
+            // Create buttons
+            JButton loadButton = SharedUI.createRoundedButton("▶ Load Profile",
+                    new Color(102, 187, 106), Color.WHITE);
+            JButton deleteButton = SharedUI.createRoundedButton("🗑️ Delete Profile",
+                    new Color(200, 80, 80), Color.WHITE);
+            JButton newButton = SharedUI.createRoundedButton("➕ Create New Profile",
+                    new Color(102, 187, 106), Color.WHITE);
+
+            for (JButton btn : new JButton[]{loadButton, deleteButton, newButton}) {
+                btn.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
+                btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+                btn.setPreferredSize(buttonSize);
+                btn.setMaximumSize(buttonSize);
+                btn.setMinimumSize(buttonSize);
+            }
+
+            deleteButton.setEnabled(false); // only active when a profile is selected
+
+            // Enable delete when selection changes
+            profileDropdown.addActionListener(e -> deleteButton.setEnabled(profileDropdown.getSelectedItem() != null));
+
             loadButton.addActionListener(e -> loadSelectedProfile());
-
-            JButton newButton = createStyledButton("Create New Profile", new Color(120, 200, 120));
+            deleteButton.addActionListener(e -> deleteSelectedProfile());
             newButton.addActionListener(e -> createProfile());
 
+            // Assemble vertically
             centerPanel.add(chooseLabel);
             centerPanel.add(profileDropdown);
             centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
             centerPanel.add(loadButton);
             centerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            centerPanel.add(deleteButton);
+            centerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
             centerPanel.add(newButton);
         }
+
+
 
         add(centerPanel, BorderLayout.CENTER);
 
@@ -83,17 +142,16 @@ public class SplashScreenUI extends JFrame {
         footer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         add(footer, BorderLayout.SOUTH);
 
-     // --- Window Setup (mobile style) ---
-        setSize(360, 640);          // typical phone portrait size
-        setResizable(false);        // lock window size
+        // --- Window Setup ---
+        setSize(360, 640);
+        setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
 
-    /**
-     * Handles profile creation flow.
-     */
+    // === Profile Management Actions ===
+
     private void createProfile() {
         String name = JOptionPane.showInputDialog(this, "Enter your name:");
         if (name == null || name.isBlank()) {
@@ -108,15 +166,46 @@ public class SplashScreenUI extends JFrame {
             profileManager.addProfile(newProfile);
 
             JOptionPane.showMessageDialog(this, "Profile created for " + name + ".");
-            openDashboard(newProfile);
+            refreshSplash();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please enter a valid number for income.");
         }
     }
 
     /**
-     * Loads the selected profile and opens the main dashboard.
+     * Deletes the currently selected profile after user confirmation.
      */
+    private void deleteSelectedProfile() {
+        Profile selected = (Profile) profileDropdown.getSelectedItem();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "Please select a profile to delete.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete the profile \"" + selected.getName() + "\"?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            profileManager.deleteProfile(selected);
+            JOptionPane.showMessageDialog(this,
+                    "Profile \"" + selected.getName() + "\" has been deleted.");
+
+            // Refresh dropdown or recreate UI depending on remaining profiles
+            if (profileManager.getProfiles().isEmpty()) {
+                dispose();
+                new SplashScreenUI(); // rebuild UI to show "Create Profile" only
+            } else {
+                profileDropdown.removeItem(selected);
+            }
+        }
+    }
+
+
     private void loadSelectedProfile() {
         Profile selected = (Profile) profileDropdown.getSelectedItem();
         if (selected == null) {
@@ -128,28 +217,15 @@ public class SplashScreenUI extends JFrame {
         openDashboard(selected);
     }
 
-    /**
-     * Launches the main dashboard window.
-     */
     private void openDashboard(Profile profile) {
-        dispose(); // close splash
-        SwingUI mainUI = new SwingUI(profile); // Pass profile here
+        dispose();
+        SwingUI mainUI = new SwingUI(profile);
         mainUI.setVisible(true);
     }
 
-    /**
-     * Creates a uniformly styled JButton.
-     */
-    private JButton createStyledButton(String text, Color bgColor) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return button;
+    private void refreshSplash() {
+        dispose();
+        new SplashScreenUI();
     }
 
     public static void main(String[] args) {
