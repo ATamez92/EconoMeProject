@@ -144,6 +144,7 @@ public class WantsUI {
                 completeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 completeBtn.addActionListener(e -> {
                     w.markComplete();
+                    profile.saveProfile(); // ✅ persist after marking complete
                     refreshWantsContent(dialog, contentPanel);
                 });
 
@@ -193,12 +194,21 @@ public class WantsUI {
             listPanel.add(Box.createVerticalGlue(), gbc);
 
             JScrollPane scroll = new JScrollPane(listPanel);
-            scroll.setBorder(null);
-            scroll.setOpaque(false);
-            scroll.getViewport().setOpaque(false);
-            scroll.getVerticalScrollBar().setUnitIncrement(16);
+            scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+            // ❗ Key lines that fix the scrollbar placement:
+            scroll.setBorder(BorderFactory.createEmptyBorder()); 
+            scroll.setOpaque(true);
+            scroll.getViewport().setOpaque(true);
+            scroll.setBackground(UITheme.BACKGROUND);
+            scroll.getViewport().setBackground(UITheme.BACKGROUND);
+
+            // match the TasksUI behavior
+            scroll.getVerticalScrollBar().setUnitIncrement(16);
+            scroll.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
+
+            contentPanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 0)); 
             contentPanel.add(scroll, BorderLayout.CENTER);
         }
 

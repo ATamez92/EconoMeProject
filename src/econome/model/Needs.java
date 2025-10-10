@@ -1,51 +1,94 @@
 package econome.model;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
- * Represents an essential financial obligation ("Need") for the user.
- * Examples: rent, utilities, groceries, or other mandatory expenses.
+ * Represents a required financial obligation (“Need”) for the user.
+ * <p>
+ * Examples include rent, utilities, groceries, or other essential expenses.
+ * Each {@code Needs} object tracks its description, cost, due date,
+ * and whether it has been completed or paid.
+ * </p>
  *
- * Each Need has:
- * - A description (what the expense is for).
- * - A cost (expected payment amount).
- * - A due date (when it must be paid).
- * - A completion status (whether it has been paid/fulfilled).
+ * <h3>Responsibilities:</h3>
+ * <ul>
+ *   <li>Store descriptive and financial details of a required expense.</li>
+ *   <li>Track completion status for payments or obligations.</li>
+ * </ul>
+ *
+ * <h3>Attributes:</h3>
+ * <ul>
+ *   <li><b>description</b> — purpose of the expense</li>
+ *   <li><b>cost</b> — expected payment amount</li>
+ *   <li><b>dueDate</b> — payment due date</li>
+ *   <li><b>isComplete</b> — whether the expense has been paid</li>
+ * </ul>
  */
-public class Needs {
+public class Needs implements Serializable {
+
+    // --- Serialization -------------------------------------------------------
+
+    /** Required for consistent serialization across versions. */
+    private static final long serialVersionUID = 1L;
+
+
+    // --- Fields --------------------------------------------------------------
+
     private String description;
     private double cost;
     private LocalDate dueDate;
     private boolean isComplete;
 
+
+    // --- Constructors --------------------------------------------------------
+
     /**
-     * Creates a new Need item.
+     * Constructs a new {@code Needs} object representing a required expense.
      *
-     * @param description description of the expense
-     * @param cost expected cost of the expense
-     * @param dueDate due date for the expense
+     * @param description a short description of the expense (e.g., "Rent", "Groceries")
+     * @param cost the expected cost of the expense
+     * @param dueDate the date the expense is due
      */
     public Needs(String description, double cost, LocalDate dueDate) {
         this.description = description;
         this.cost = cost;
         this.dueDate = dueDate;
-        this.isComplete = false; // default to incomplete
-    }
+        this.isComplete = false; // Default state: incomplete
+    } // End of constructor Needs
 
-    /** @return the description of this need */
-    public String getDescription() { return description; }
 
-    /** @return the cost of this need */
-    public double getCost() { return cost; }
+    // --- Accessors (Getters) -------------------------------------------------
 
-    /** @return the due date for this need */
-    public LocalDate getDueDate() { return dueDate; }
+    /** @return the description of this Need */
+    public String getDescription() {
+        return description;
+    } // End of method getDescription
 
-    /** @return true if this need has been marked complete */
-    public boolean isComplete() { return isComplete; }
+    /** @return the expected cost of this Need */
+    public double getCost() {
+        return cost;
+    } // End of method getCost
+
+    /** @return the due date of this Need */
+    public LocalDate getDueDate() {
+        return dueDate;
+    } // End of method getDueDate
+
+    /** @return {@code true} if this Need has been marked complete */
+    public boolean isComplete() {
+        return isComplete;
+    } // End of method isComplete
+
+
+    // --- Mutators (Actions) --------------------------------------------------
 
     /**
-     * Marks this need as completed (e.g., bill has been paid).
+     * Marks this Need as completed (for example, when the bill has been paid).
      */
-    public void markComplete() { this.isComplete = true; }
-}
+    public void markComplete() {
+        this.isComplete = true;
+    } // End of method markComplete
+
+
+} // End of class Needs

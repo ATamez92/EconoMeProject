@@ -1,69 +1,113 @@
 package econome.model;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
  * Represents a discretionary financial goal ("Want") for the user.
- * Examples: vacation, new gadget, or entertainment purchase.
+ * <p>
+ * Examples include vacations, electronics, entertainment, or other
+ * non-essential purchases. Each {@code Want} tracks its description,
+ * cost, target date, and completion status.
+ * </p>
  *
- * Each Want has:
- * - A description (name of the goal/purchase).
- * - A cost (expected amount required).
- * - A target due date.
- * - A completion status (whether it has been achieved or marked complete).
+ * <h3>Responsibilities:</h3>
+ * <ul>
+ *   <li>Store descriptive and financial details of a user's goal.</li>
+ *   <li>Track completion status (achieved or not).</li>
+ * </ul>
  */
-public class Wants {
+public class Wants implements Serializable {
+
+    // --- Serialization -------------------------------------------------------
+
+    /** Ensures consistent serialization across versions. */
+    private static final long serialVersionUID = 1L;
+
+
+    // --- Fields --------------------------------------------------------------
+
+    /** Short description of the financial goal (e.g., "Vacation to Japan"). */
     private String description;
+
+    /** Total expected cost required to achieve the goal. */
     private double cost;
+
+    /** Target date by which the user aims to achieve the goal. */
     private LocalDate dueDate;
+
+    /** Whether this goal has been marked as complete or achieved. */
     private boolean isComplete;
 
+
+    // --- Constructor ---------------------------------------------------------
+
     /**
-     * Creates a new Want item.
+     * Constructs a new {@code Want} with the given details.
      *
-     * @param description description of the want
-     * @param cost expected cost
-     * @param dueDate target date for achieving this want
+     * @param description  a short description of the goal
+     * @param cost         the expected cost of achieving the goal
+     * @param dueDate      the target completion date
      */
     public Wants(String description, double cost, LocalDate dueDate) {
         this.description = description;
         this.cost = cost;
         this.dueDate = dueDate;
-        this.isComplete = false; // default to incomplete
-    }
+        this.isComplete = false; // Default to incomplete
+    } // End of constructor Wants
 
-    // --- Getters ---
 
-    /** @return the description of this want */
-    public String getDescription() { return description; }
+    // --- Accessors -----------------------------------------------------------
 
-    /** @return the cost of this want */
-    public double getCost() { return cost; }
+    /** @return the description of this Want */
+    public String getDescription() {
+        return description;
+    } // End of method getDescription
 
-    /** @return the due date for this want */
-    public LocalDate getDueDate() { return dueDate; }
+    /** @return the total cost associated with this Want */
+    public double getCost() {
+        return cost;
+    } // End of method getCost
 
-    /** @return true if the want has been marked complete */
-    public boolean isComplete() { return isComplete; }
+    /** @return the target date by which this Want should be completed */
+    public LocalDate getDueDate() {
+        return dueDate;
+    } // End of method getDueDate
 
-    // --- Setters (optional) ---
+    /** @return {@code true} if this Want has been marked as complete */
+    public boolean isComplete() {
+        return isComplete;
+    } // End of method isComplete
 
-    /** Updates the description of this want */
-    public void setDescription(String description) { this.description = description; }
 
-    /** Updates the cost of this want */
-    public void setCost(double cost) { this.cost = cost; }
+    // --- Mutators ------------------------------------------------------------
 
-    /** Updates the due date of this want */
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    /** Updates the description for this Want. */
+    public void setDescription(String description) {
+        this.description = description;
+    } // End of method setDescription
 
-    // --- Actions ---
+    /** Updates the total cost for this Want. */
+    public void setCost(double cost) {
+        this.cost = cost;
+    } // End of method setCost
+
+    /** Updates the target completion date for this Want. */
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    } // End of method setDueDate
+
+
+    // --- Actions -------------------------------------------------------------
 
     /**
-     * Marks this want as completed.
-     * Can be used when the user has achieved or purchased the item.
+     * Marks this Want as completed.
+     * <p>
+     * Typically used when the user has achieved or purchased the desired item.
+     * </p>
      */
     public void markComplete() {
         this.isComplete = true;
-    }
-}
+    } // End of method markComplete
+
+} // End of class Wants

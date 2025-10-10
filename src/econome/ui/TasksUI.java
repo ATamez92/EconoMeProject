@@ -8,34 +8,91 @@ import econome.model.Needs;
 import econome.model.Wants;
 
 /**
- * Combined "Tasks" page — shows both Needs and Wants in one scrollable list.
+ * Displays a combined "Tasks" page that shows all active Needs and Wants
+ * in a single, scrollable list.
+ * <p>
+ * Each item card includes:
+ * <ul>
+ *   <li>Description, cost, and due/target date</li>
+ *   <li>A color-coded tag indicating type (Need or Want)</li>
+ *   <li>A button to mark completion</li>
+ * </ul>
+ * </p>
  */
 public class TasksUI {
 
+    // --- References ---
     private final Profile profile;
     private final SwingUI parent;
 
+    /**
+     * Constructs a new TasksUI screen for the given profile.
+     *
+     * @param profile the user's profile containing Needs and Wants
+     * @param parent  the main SwingUI controller
+     */
     public TasksUI(Profile profile, SwingUI parent) {
         this.profile = profile;
         this.parent = parent;
         buildScreen();
-    }
+    } // End of constructor TasksUI
 
+
+    // -------------------------------------------------------------------------
+    // SCREEN BUILDING
+    // -------------------------------------------------------------------------
+
+    /**
+     * Builds and displays the main Tasks screen.
+     * Includes both Needs and Wants in one scrollable list.
+     */
     private void buildScreen() {
+        // 🪟 Create base window
         JDialog dialog = SharedUI.createBaseScreen("Tasks", parent);
         dialog.setLayout(new BorderLayout());
 
-        // --- Scrollable list area ---
+        // --- Header Section ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JLabel titleLabel = new JLabel("Your Tasks", SwingConstants.CENTER);
+        titleLabel.setFont(UITheme.TITLE_FONT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+
+        JLabel subtitleLabel = new JLabel("All Needs and Wants in one place", SwingConstants.CENTER);
+        subtitleLabel.setFont(UITheme.SUBTITLE_FONT);
+        subtitleLabel.setForeground(Color.DARK_GRAY);
+
+        JPanel titleWrap = new JPanel(new GridLayout(2, 1));
+        titleWrap.setOpaque(false);
+        titleWrap.add(titleLabel);
+        titleWrap.add(subtitleLabel);
+        headerPanel.add(titleWrap, BorderLayout.CENTER);
+
+        dialog.add(headerPanel, BorderLayout.NORTH);
+
+        // --- Scrollable List Section ---
         JPanel listPanel = new JPanel();
         listPanel.setOpaque(false);
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        // Add tasks for Needs and Wants
+        // Add Needs and Wants
         addTasksToPanel(listPanel, profile.getNeedsList(), "Need", new Color(102, 187, 106));
         addTasksToPanel(listPanel, profile.getWantsList(), "Want", new Color(66, 165, 245));
 
-        // --- Scroll Pane ---
+        // Empty State
+        if (profile.getNeedsList().isEmpty() && profile.getWantsList().isEmpty()) {
+            JLabel emptyLabel = new JLabel("(No current tasks)", SwingConstants.CENTER);
+            emptyLabel.setFont(UITheme.BODY_FONT);
+            emptyLabel.setForeground(Color.GRAY);
+            listPanel.add(Box.createVerticalGlue());
+            listPanel.add(emptyLabel);
+            listPanel.add(Box.createVerticalGlue());
+        }
+
+        // Scroll Pane Configuration
         JScrollPane scrollPane = new JScrollPane(listPanel);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
@@ -58,42 +115,53 @@ public class TasksUI {
         dialog.add(bottom, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
-    }
+    } // End of method buildScreen
+
+
+    // -------------------------------------------------------------------------
+    // TASK CARD CREATION
+    // -------------------------------------------------------------------------
 
     /**
-     * Adds Need/Want task cards to the given panel.
+     * Adds Need or Want task cards to the specified panel.
+     *
+     * @param parentPanel the container panel to add cards into
+     * @param items       the list of tasks (Needs or Wants)
+     * @param typeLabel   text label for the tag (e.g., "Need", "Want")
+     * @param tagColor    background color for the type tag
      */
     private void addTasksToPanel(JPanel parentPanel, List<?> items, String typeLabel, Color tagColor) {
         if (items.isEmpty()) return;
 
         for (Object obj : items) {
+
             // --- Card setup ---
             JPanel card = SharedUI.createCardPanel(90);
             card.setLayout(new BorderLayout(10, 0));
             card.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-
             card.setPreferredSize(new Dimension(300, 90));
             card.setMaximumSize(new Dimension(300, 90));
-            card.setMinimumSize(new Dimension(300, 90));
             card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             // --- Extract info ---
-            String desc, costText, dateText;
+            String desc;
+            String costText;
+            String dateText;
             boolean complete;
 
-            if (obj instanceof Needs n) {
-                desc = n.getDescription();
-                costText = "$" + String.format("%.2f", n.getCost());
-                dateText = "Due: " + n.getDueDate();
-                complete = n.isComplete();
-            } else if (obj instanceof Wants w) {
-                desc = w.getDescription();
-                costText = "$" + String.format("%.2f", w.getCost());
-                dateText = "Target: " + w.getDueDate();
-                complete = w.isComplete();
+            if (obj instanceof Needs need) {
+                desc = need.getDescription();
+                costText = "$" + String.format("%.2f", need.getCost());
+                dateText = "Due: " + need.getDueDate();
+                complete = need.isComplete();
+            } else if (obj instanceof Wants want) {
+                desc = want.getDescription();
+                costText = "$" + String.format("%.2f", want.getCost());
+                dateText = "Target: " + want.getDueDate();
+                complete = want.isComplete();
             } else continue;
 
-            // --- LEFT text section (vertically centered, left aligned) ---
+            // --- LEFT: Info Panel (description, cost, date) ---
             JPanel textPanel = new JPanel();
             textPanel.setOpaque(false);
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -125,11 +193,11 @@ public class TasksUI {
             gbcInfo.anchor = GridBagConstraints.WEST;
             infoPanel.add(textPanel, gbcInfo);
 
-            // --- RIGHT side: tag (top-right) + complete button (bottom-right) ---
+            // --- RIGHT: Tag and Complete Button ---
             JPanel rightPanel = new JPanel(new BorderLayout());
             rightPanel.setOpaque(false);
 
-            // Tag at top-right
+            // Type Tag
             JLabel tag = new JLabel(typeLabel, SwingConstants.CENTER);
             tag.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 11f));
             tag.setForeground(Color.WHITE);
@@ -142,7 +210,7 @@ public class TasksUI {
             tagWrap.add(tag);
             rightPanel.add(tagWrap, BorderLayout.NORTH);
 
-            // Complete button at bottom-right
+            // Complete Button
             JButton completeBtn = SharedUI.createRoundedButton(
                     complete ? "✓ Done" : "Complete",
                     complete ? new Color(180, 180, 180) : UITheme.PRIMARY_LIGHT,
@@ -154,9 +222,10 @@ public class TasksUI {
             completeBtn.setPreferredSize(new Dimension(120, 32));
             completeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+            // Button Action
             completeBtn.addActionListener(e -> {
-                if (obj instanceof Needs n) n.markComplete();
-                else if (obj instanceof Wants w) w.markComplete();
+                if (obj instanceof Needs need) need.markComplete();
+                else if (obj instanceof Wants want) want.markComplete();
 
                 parentPanel.removeAll();
                 addTasksToPanel(parentPanel, profile.getNeedsList(), "Need", new Color(102, 187, 106));
@@ -177,5 +246,5 @@ public class TasksUI {
             parentPanel.add(card);
             parentPanel.add(Box.createRigidArea(new Dimension(0, 8)));
         }
-    }
-}
+    } // End of method addTasksToPanel
+} // End of class TasksUI

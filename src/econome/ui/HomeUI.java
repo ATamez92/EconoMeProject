@@ -5,26 +5,48 @@ import java.awt.*;
 import econome.model.Profile;
 
 /**
- * Home screen for EconoMe.
- * Displays total balance, recent activity, and quick access to Needs/Wants.
+ * Represents the Home screen of the EconoMe application.
+ * <p>
+ * Displays key user financial information such as total balance
+ * and recent activity, and provides quick access to the Needs and Wants pages.
+ * </p>
+ *
+ * <h3>Responsibilities:</h3>
+ * <ul>
+ *   <li>Display the user’s total balance.</li>
+ *   <li>List recent activity (currently placeholder text).</li>
+ *   <li>Provide quick navigation to Needs and Wants screens.</li>
+ *   <li>Include bottom navigation for all app sections.</li>
+ * </ul>
  */
 public class HomeUI {
 
-    private final Profile profile;
-    private final SwingUI parent;
+    // --- Instance Variables ---
+    private final Profile userProfile;  // Active user profile
+    private final SwingUI parentUI;     // Reference to parent Swing container
 
+    /**
+     * Constructs the Home screen for a given profile.
+     *
+     * @param profile the current user’s financial profile
+     * @param parent  reference to the parent UI for navigation
+     */
     public HomeUI(Profile profile, SwingUI parent) {
-        this.profile = profile;
-        this.parent = parent;
+        this.userProfile = profile;
+        this.parentUI = parent;
         buildScreen();
-    }
+    } // End of constructor HomeUI
 
+    /**
+     * Builds and displays the Home screen layout.
+     * Includes total balance, recent activity, and quick access buttons.
+     */
     private void buildScreen() {
-        // 🪟 Base window styled like mobile screen
-        JDialog dialog = SharedUI.createBaseScreen("Home", parent);
+        // --- Base window styled like a mobile screen ---
+        JDialog dialog = SharedUI.createBaseScreen("Home", parentUI);
         dialog.setLayout(new BorderLayout());
 
-        // --- Scrollable content (Balance + Recent Activity) ---
+        // --- Scrollable Content Area ---
         JPanel scrollContent = new JPanel();
         scrollContent.setOpaque(false);
         scrollContent.setLayout(new BoxLayout(scrollContent, BoxLayout.Y_AXIS));
@@ -41,7 +63,7 @@ public class HomeUI {
         balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel balanceAmount = new JLabel(
-                "$" + String.format("%.2f", profile.getSavingsBalance()), SwingConstants.CENTER);
+                "$" + String.format("%.2f", userProfile.getSavingsBalance()), SwingConstants.CENTER);
         balanceAmount.setFont(UITheme.TITLE_FONT.deriveFont(Font.BOLD, 26f));
         balanceAmount.setForeground(Color.WHITE);
         balanceAmount.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -53,7 +75,7 @@ public class HomeUI {
         scrollContent.add(balanceCard);
         scrollContent.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // --- Recent Activity ---
+        // --- Recent Activity Panel ---
         JPanel recentPanel = new JPanel();
         recentPanel.setOpaque(false);
         recentPanel.setLayout(new BoxLayout(recentPanel, BoxLayout.Y_AXIS));
@@ -73,49 +95,51 @@ public class HomeUI {
 
         scrollContent.add(recentPanel);
 
+        // --- Scroll Pane Wrapper ---
         JScrollPane scrollPane = new JScrollPane(scrollContent);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
         dialog.add(scrollPane, BorderLayout.CENTER);
 
-     // --- Fixed Needs/Wants Button Bar ---
+        // --- Quick Access Button Bar (Needs / Wants) ---
         JPanel quickAccessOuter = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 8));
         quickAccessOuter.setOpaque(false);
         quickAccessOuter.setBorder(BorderFactory.createEmptyBorder(0, 20, 8, 20));
 
         Color lightGreen = new Color(102, 187, 106);
-        Dimension bigBtn = new Dimension(150, 48);
+        Dimension bigButtonSize = new Dimension(150, 48);
 
-        JButton needsBtn = SharedUI.createRoundedButton("🛒 Needs", lightGreen, Color.WHITE);
-        needsBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
-        needsBtn.setPreferredSize(bigBtn);
-        needsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        needsBtn.addActionListener(e -> {
+        // Needs button
+        JButton needsButton = SharedUI.createRoundedButton("🛒 Needs", lightGreen, Color.WHITE);
+        needsButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
+        needsButton.setPreferredSize(bigButtonSize);
+        needsButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        needsButton.addActionListener(e -> {
             dialog.dispose();
-            new NeedsUI(profile, parent);
+            new NeedsUI(userProfile, parentUI);
         });
 
-        JButton wantsBtn = SharedUI.createRoundedButton("🎯 Wants", lightGreen, Color.WHITE);
-        wantsBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
-        wantsBtn.setPreferredSize(bigBtn);
-        wantsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        wantsBtn.addActionListener(e -> {
+        // Wants button
+        JButton wantsButton = SharedUI.createRoundedButton("🎯 Wants", lightGreen, Color.WHITE);
+        wantsButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
+        wantsButton.setPreferredSize(bigButtonSize);
+        wantsButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        wantsButton.addActionListener(e -> {
             dialog.dispose();
-            new WantsUI(profile, parent);
+            new WantsUI(userProfile, parentUI);
         });
 
-        // ✅ Inner grid keeps them side-by-side (never stacks)
+        // Keep buttons side by side
         JPanel quickAccessGrid = new JPanel(new GridLayout(1, 2, 16, 0));
         quickAccessGrid.setOpaque(false);
-        quickAccessGrid.add(needsBtn);
-        quickAccessGrid.add(wantsBtn);
+        quickAccessGrid.add(needsButton);
+        quickAccessGrid.add(wantsButton);
 
         quickAccessOuter.add(quickAccessGrid);
 
-        // Wrap quick access above nav bar
+        // --- Lower Wrapper (Quick Access + Navigation Bar) ---
         JPanel lowerWrap = new JPanel(new BorderLayout());
         lowerWrap.setOpaque(false);
         lowerWrap.add(quickAccessOuter, BorderLayout.NORTH);
@@ -125,17 +149,15 @@ public class HomeUI {
                 dialog,
                 null,
                 new Runnable[]{
-                        () -> new HomeUI(profile, parent),
-                        () -> new TasksUI(profile, parent),
-                        () -> new PlanUI(profile, parent),
-                        () -> parent.showSettingsMenu()
+                        () -> new HomeUI(userProfile, parentUI),
+                        () -> new TasksUI(userProfile, parentUI),
+                        () -> new PlanUI(userProfile, parentUI),
+                        () -> parentUI.showSettingsMenu()
                 }
         );
         lowerWrap.add(navBar, BorderLayout.SOUTH);
 
         dialog.add(lowerWrap, BorderLayout.SOUTH);
-
-
         dialog.setVisible(true);
-    }
-}
+    } // End of method buildScreen
+} // End of class HomeUI

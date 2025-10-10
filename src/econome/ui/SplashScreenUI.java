@@ -4,19 +4,31 @@ import econome.logic.ProfileManager;
 import econome.model.Profile;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 
 /**
- * Entry screen for EconoMe.
- * Allows users to select, create, load, or delete a saved profile.
+ * Represents the splash (entry) screen for the EconoMe application.
+ * <p>
+ * Allows users to:
+ * <ul>
+ *   <li>Select and load an existing financial profile.</li>
+ *   <li>Create a new profile.</li>
+ *   <li>Delete an existing profile.</li>
+ * </ul>
+ * This is the first screen shown when launching the application.
+ * </p>
  */
 public class SplashScreenUI extends JFrame {
     private static final long serialVersionUID = 1L;
 
+    // --- Instance Variables ---
     private final ProfileManager profileManager;
     private JComboBox<Profile> profileDropdown;
     private JButton deleteButton;
 
+    /**
+     * Constructs and displays the splash screen for EconoMe.
+     * Initializes the UI and loads saved profiles from disk.
+     */
     public SplashScreenUI() {
         super("Welcome to EconoMe");
         profileManager = new ProfileManager();
@@ -24,28 +36,55 @@ public class SplashScreenUI extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(UITheme.BACKGROUND);
 
-        // --- Header ---
-        JLabel title = new JLabel("💸 Welcome to EconoMe", SwingConstants.CENTER);
-        title.setFont(UITheme.TITLE_FONT);
-        title.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
+        buildHeaderSection();
+        buildCenterSection();
+        buildFooterSection();
 
-        JLabel subtitle = new JLabel("Manage your needs, wants, and savings", SwingConstants.CENTER);
-        subtitle.setFont(UITheme.SUBTITLE_FONT);
+        // --- Window Setup ---
+        setSize(360, 640);
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    } // End of constructor SplashScreenUI
+
+
+    // -------------------------------------------------------------------------
+    // UI BUILD SECTIONS
+    // -------------------------------------------------------------------------
+
+    /**
+     * Builds the top header with title and subtitle.
+     */
+    private void buildHeaderSection() {
+        JLabel titleLabel = new JLabel("💸 Welcome to EconoMe", SwingConstants.CENTER);
+        titleLabel.setFont(UITheme.TITLE_FONT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
+
+        JLabel subtitleLabel = new JLabel("Manage your needs, wants, and savings", SwingConstants.CENTER);
+        subtitleLabel.setFont(UITheme.SUBTITLE_FONT);
 
         JPanel headerPanel = new JPanel(new GridLayout(2, 1));
         headerPanel.setOpaque(false);
-        headerPanel.add(title);
-        headerPanel.add(subtitle);
-        add(headerPanel, BorderLayout.NORTH);
+        headerPanel.add(titleLabel);
+        headerPanel.add(subtitleLabel);
 
-     // --- Center Panel ---
+        add(headerPanel, BorderLayout.NORTH);
+    } // End of method buildHeaderSection
+
+
+    /**
+     * Builds the main content area of the splash screen.
+     * Displays either a “Create Profile” prompt or profile selection options.
+     */
+    private void buildCenterSection() {
         JPanel centerPanel = new JPanel();
         centerPanel.setOpaque(false);
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
 
         if (profileManager.getProfiles().isEmpty()) {
-            // No profiles yet — show "Create Profile" button only
+            // No profiles yet — only show Create Profile button
             JButton createButton = SharedUI.createRoundedButton("➕ Create Profile",
                     new Color(102, 187, 106), Color.WHITE);
             createButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
@@ -55,14 +94,13 @@ public class SplashScreenUI extends JFrame {
             Dimension buttonSize = new Dimension(220, 45);
             createButton.setPreferredSize(buttonSize);
             createButton.setMaximumSize(buttonSize);
-            createButton.setMinimumSize(buttonSize);
 
             centerPanel.add(Box.createVerticalGlue());
             centerPanel.add(createButton);
             centerPanel.add(Box.createVerticalGlue());
 
         } else {
-            // Profiles exist — show dropdown and action buttons
+            // Existing profiles found — show dropdown and controls
             JLabel chooseLabel = new JLabel("Select a profile:");
             chooseLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             chooseLabel.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 14f));
@@ -76,7 +114,7 @@ public class SplashScreenUI extends JFrame {
             profileDropdown.setCursor(new Cursor(Cursor.HAND_CURSOR));
             profileDropdown.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
 
-            // ✅ Modern rounded dropdown style (Option 2)
+            // Custom rounded dropdown style
             profileDropdown.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
                 @Override
                 public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
@@ -84,44 +122,41 @@ public class SplashScreenUI extends JFrame {
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(Color.WHITE);
                     g2.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 20, 20);
-                    g2.setColor(new Color(200, 200, 200)); // soft gray border
+                    g2.setColor(new Color(200, 200, 200));
                     g2.drawRoundRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1, 20, 20);
                     g2.dispose();
                 }
             });
 
-            // Match dropdown width with buttons
             Dimension buttonSize = new Dimension(220, 45);
-            profileDropdown.setMaximumSize(buttonSize);
             profileDropdown.setPreferredSize(buttonSize);
-            profileDropdown.setMinimumSize(buttonSize);
+            profileDropdown.setMaximumSize(buttonSize);
 
-            // Create buttons
+            // Action buttons
             JButton loadButton = SharedUI.createRoundedButton("▶ Load Profile",
                     new Color(102, 187, 106), Color.WHITE);
-            JButton deleteButton = SharedUI.createRoundedButton("🗑️ Delete Profile",
+            deleteButton = SharedUI.createRoundedButton("🗑️ Delete Profile",
                     new Color(200, 80, 80), Color.WHITE);
             JButton newButton = SharedUI.createRoundedButton("➕ Create New Profile",
                     new Color(102, 187, 106), Color.WHITE);
 
-            for (JButton btn : new JButton[]{loadButton, deleteButton, newButton}) {
-                btn.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
-                btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-                btn.setPreferredSize(buttonSize);
-                btn.setMaximumSize(buttonSize);
-                btn.setMinimumSize(buttonSize);
+            for (JButton button : new JButton[]{loadButton, deleteButton, newButton}) {
+                button.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
+                button.setAlignmentX(Component.CENTER_ALIGNMENT);
+                button.setPreferredSize(buttonSize);
+                button.setMaximumSize(buttonSize);
             }
 
-            deleteButton.setEnabled(false); // only active when a profile is selected
+            deleteButton.setEnabled(false);
+            profileDropdown.addActionListener(e ->
+                    deleteButton.setEnabled(profileDropdown.getSelectedItem() != null));
 
-            // Enable delete when selection changes
-            profileDropdown.addActionListener(e -> deleteButton.setEnabled(profileDropdown.getSelectedItem() != null));
-
+            // Button listeners
             loadButton.addActionListener(e -> loadSelectedProfile());
             deleteButton.addActionListener(e -> deleteSelectedProfile());
             newButton.addActionListener(e -> createProfile());
 
-            // Assemble vertically
+            // Assemble UI vertically
             centerPanel.add(chooseLabel);
             centerPanel.add(profileDropdown);
             centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -132,26 +167,28 @@ public class SplashScreenUI extends JFrame {
             centerPanel.add(newButton);
         }
 
-
-
         add(centerPanel, BorderLayout.CENTER);
+    } // End of method buildCenterSection
 
-        // --- Footer ---
-        JLabel footer = new JLabel("© 2025 EconoMe", SwingConstants.CENTER);
-        footer.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        footer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        add(footer, BorderLayout.SOUTH);
 
-        // --- Window Setup ---
-        setSize(360, 640);
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setVisible(true);
-    }
+    /**
+     * Builds the footer with copyright text.
+     */
+    private void buildFooterSection() {
+        JLabel footerLabel = new JLabel("© 2025 EconoMe", SwingConstants.CENTER);
+        footerLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        footerLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        add(footerLabel, BorderLayout.SOUTH);
+    } // End of method buildFooterSection
 
-    // === Profile Management Actions ===
 
+    // -------------------------------------------------------------------------
+    // PROFILE MANAGEMENT ACTIONS
+    // -------------------------------------------------------------------------
+
+    /**
+     * Prompts the user to create a new financial profile.
+     */
     private void createProfile() {
         String name = JOptionPane.showInputDialog(this, "Enter your name:");
         if (name == null || name.isBlank()) {
@@ -170,65 +207,86 @@ public class SplashScreenUI extends JFrame {
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please enter a valid number for income.");
         }
-    }
+    } // End of method createProfile
+
 
     /**
      * Deletes the currently selected profile after user confirmation.
      */
     private void deleteSelectedProfile() {
-        Profile selected = (Profile) profileDropdown.getSelectedItem();
-        if (selected == null) {
+        Profile selectedProfile = (Profile) profileDropdown.getSelectedItem();
+        if (selectedProfile == null) {
             JOptionPane.showMessageDialog(this, "Please select a profile to delete.");
             return;
         }
 
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Are you sure you want to delete the profile \"" + selected.getName() + "\"?",
+                "Are you sure you want to delete the profile \"" + selectedProfile.getName() + "\"?",
                 "Confirm Delete",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            profileManager.deleteProfile(selected);
+            profileManager.deleteProfile(selectedProfile);
             JOptionPane.showMessageDialog(this,
-                    "Profile \"" + selected.getName() + "\" has been deleted.");
+                    "Profile \"" + selectedProfile.getName() + "\" has been deleted.");
 
-            // Refresh dropdown or recreate UI depending on remaining profiles
             if (profileManager.getProfiles().isEmpty()) {
                 dispose();
-                new SplashScreenUI(); // rebuild UI to show "Create Profile" only
+                new SplashScreenUI(); // Show Create-only screen
             } else {
-                profileDropdown.removeItem(selected);
+                profileDropdown.removeItem(selectedProfile);
             }
         }
-    }
+    } // End of method deleteSelectedProfile
 
 
+    /**
+     * Loads the selected profile and opens the main dashboard.
+     */
     private void loadSelectedProfile() {
-        Profile selected = (Profile) profileDropdown.getSelectedItem();
-        if (selected == null) {
+        Profile selectedProfile = (Profile) profileDropdown.getSelectedItem();
+        if (selectedProfile == null) {
             JOptionPane.showMessageDialog(this, "Please select a profile first.");
             return;
         }
 
-        JOptionPane.showMessageDialog(this, "Loading profile: " + selected.getName());
-        openDashboard(selected);
-    }
+        JOptionPane.showMessageDialog(this, "Loading profile: " + selectedProfile.getName());
+        openDashboard(selectedProfile);
+    } // End of method loadSelectedProfile
 
+
+    /**
+     * Opens the main EconoMe dashboard for the specified profile.
+     *
+     * @param profile the profile to load
+     */
     private void openDashboard(Profile profile) {
         dispose();
         SwingUI mainUI = new SwingUI(profile);
         mainUI.setVisible(true);
-    }
+    } // End of method openDashboard
 
+
+    /**
+     * Refreshes the splash screen after profile creation or deletion.
+     */
     private void refreshSplash() {
         dispose();
         new SplashScreenUI();
-    }
+    } // End of method refreshSplash
 
+
+    // -------------------------------------------------------------------------
+    // APPLICATION ENTRY POINT
+    // -------------------------------------------------------------------------
+
+    /**
+     * Launches the EconoMe splash screen.
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SplashScreenUI::new);
-    }
-}
+    } // End of method main
+} // End of class SplashScreenUI

@@ -4,44 +4,61 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import java.util.List;
-import econome.model.Wants;
-import java.time.LocalDate;
-import econome.model.Needs;
+import econome.model.*;
 import econome.logic.BudgetManager;
-import econome.model.Profile;
-import econome.ui.UITheme;
-import econome.ui.SharedUI;
+import java.time.LocalDate;
 
 /**
- * Main dashboard for the EconoMe application.
- * Displays the user's overview and key navigation buttons.
+ * Acts as the main controller for the EconoMe application's Swing interface.
+ * <p>
+ * Handles navigation between pages (Home, Needs, Wants, etc.)
+ * and manages the dialogs for adding new Needs or Wants.
+ * </p>
+ *
+ * <h3>Responsibilities:</h3>
+ * <ul>
+ *   <li>Launch and manage main dashboard screens.</li>
+ *   <li>Provide modal dialogs for creating Needs and Wants.</li>
+ *   <li>Route user interactions and refresh content dynamically.</li>
+ * </ul>
  */
 public class SwingUI extends JFrame implements ActionListener {
     private static final long serialVersionUID = 1L;
 
+    // --- Core Application References ---
     private final BudgetManager budgetManager;
     private final Profile profile;
 
-    // --- Buttons ---
+    // --- Buttons (not currently shown on Home, but preserved for future use) ---
     private final JButton needsButton = new JButton("Needs");
     private final JButton wantsButton = new JButton("Wants");
     private final JButton savingsButton = new JButton("Savings");
     private final JButton settingsButton = new JButton("Settings");
 
+    /**
+     * Constructs the SwingUI controller for a specific profile.
+     * Automatically opens the Home screen upon creation.
+     *
+     * @param profile the user profile currently in use
+     */
     public SwingUI(Profile profile) {
         this.profile = profile;
         this.budgetManager = new BudgetManager();
 
-        // Immediately open the new Home page (now your main screen)
+        // Launch main Home screen immediately
         new HomeUI(profile, this);
-    }
+    } // End of constructor SwingUI
 
 
+    // -------------------------------------------------------------------------
+    // STYLING HELPERS
+    // -------------------------------------------------------------------------
 
     /**
-     * Helper: applies consistent styling to main dashboard buttons.
+     * Applies consistent styling to dashboard buttons.
+     *
+     * @param button  the button to style
+     * @param bgColor background color
      */
     private void styleMainButton(JButton button, Color bgColor) {
         button.setFocusPainted(false);
@@ -50,112 +67,71 @@ public class SwingUI extends JFrame implements ActionListener {
         button.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 16f));
         button.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-    
-    public Profile getProfile() {
-        return profile;
-    }
+    } // End of method styleMainButton
+
 
     /**
-     * Handles main button clicks.
+     * Returns the currently active user profile.
+     *
+     * @return the loaded {@link Profile}
+     */
+    public Profile getProfile() {
+        return profile;
+    } // End of method getProfile
+
+
+    // -------------------------------------------------------------------------
+    // ACTION HANDLING
+    // -------------------------------------------------------------------------
+
+    /**
+     * Handles navigation button actions (if used).
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
+        Object source = e.getSource();
 
-        if (src == needsButton) {
+        if (source == needsButton) {
             new NeedsUI(profile, this);
-        } else if (src == wantsButton) {
+        } else if (source == wantsButton) {
             JOptionPane.showMessageDialog(this, "Wants section coming soon!");
-        } else if (src == savingsButton) {
+        } else if (source == savingsButton) {
             JOptionPane.showMessageDialog(this, "Savings section coming soon!");
-        } else if (src == settingsButton) {
+        } else if (source == settingsButton) {
             JOptionPane.showMessageDialog(this, "Settings coming soon!");
         }
-    }
+    } // End of method actionPerformed
 
+
+    // -------------------------------------------------------------------------
+    // NEEDS DIALOG
+    // -------------------------------------------------------------------------
+
+    /**
+     * Displays a modal dialog allowing the user to add a new "Need".
+     *
+     * @param refreshAction callback to refresh the UI after saving
+     */
     public void showAddNeedDialog(Runnable refreshAction) {
-        // Create modal dialog
-        JDialog dialog = new JDialog(this, "Add Need", true);
-        dialog.getContentPane().setBackground(UITheme.BACKGROUND);
-        dialog.setLayout(new BorderLayout(10, 10));
+        JDialog dialog = createBaseDialog("Add Need");
 
-        // 📱 Mobile-style size and layout
-        dialog.setSize(360, 640);
-        dialog.setResizable(false);
-        dialog.setLocationRelativeTo(this);
-
-        // --- Header ---
         JLabel header = new JLabel("Add a New Need", SwingConstants.CENTER);
         header.setFont(UITheme.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         dialog.add(header, BorderLayout.NORTH);
 
-        // --- Input Fields Panel ---
-        JPanel inputPanel = new JPanel();
-        inputPanel.setOpaque(false);
-        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
-
-        // Description Field
-        JLabel descLabel = new JLabel("Description:");
-        descLabel.setFont(UITheme.BODY_FONT);
-        JTextField descField = new JTextField();
-        descField.setFont(UITheme.BODY_FONT);
-        descField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        // Cost Field
-        JLabel costLabel = new JLabel("Cost ($):");
-        costLabel.setFont(UITheme.BODY_FONT);
-        JTextField costField = new JTextField();
-        costField.setFont(UITheme.BODY_FONT);
-        costField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        // Due Date Field
-        JLabel dateLabel = new JLabel("Due Date (YYYY-MM-DD):");
-        dateLabel.setFont(UITheme.BODY_FONT);
-        JTextField dateField = new JTextField();
-        dateField.setFont(UITheme.BODY_FONT);
-        dateField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        // Add to panel
-        inputPanel.add(descLabel);
-        inputPanel.add(descField);
-        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        inputPanel.add(costLabel);
-        inputPanel.add(costField);
-        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        inputPanel.add(dateLabel);
-        inputPanel.add(dateField);
-
+        JPanel inputPanel = buildInputForm(
+                "Description:",
+                "Cost ($):",
+                "Due Date (YYYY-MM-DD):"
+        );
         dialog.add(inputPanel, BorderLayout.CENTER);
 
-        // --- Bottom Buttons ---
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setOpaque(false);
-        buttonPanel.setLayout(new GridLayout(1, 2, 10, 0));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 25, 20, 25));
+        JTextField descField = (JTextField) inputPanel.getComponent(1);
+        JTextField costField = (JTextField) inputPanel.getComponent(4);
+        JTextField dateField = (JTextField) inputPanel.getComponent(7);
 
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setFont(UITheme.BODY_FONT);
-        cancelButton.setBackground(UITheme.ACCENT);
-        cancelButton.setForeground(Color.BLACK);
-        cancelButton.setFocusPainted(false);
-
-        JButton saveButton = new JButton("Save Need");
-        saveButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 15f));
-        saveButton.setBackground(UITheme.PRIMARY);
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFocusPainted(false);
-
-        buttonPanel.add(cancelButton);
-        buttonPanel.add(saveButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-        // --- Actions ---
-        cancelButton.addActionListener(e -> dialog.dispose());
-
-        saveButton.addActionListener(e -> {
+        JPanel buttonPanel = buildFormButtons(dialog, () -> {
             String desc = descField.getText().trim();
             String costText = costField.getText().trim();
             String dateText = dateField.getText().trim();
@@ -167,7 +143,7 @@ public class SwingUI extends JFrame implements ActionListener {
 
             try {
                 double cost = Double.parseDouble(costText);
-                java.time.LocalDate dueDate = java.time.LocalDate.parse(dateText);
+                LocalDate dueDate = LocalDate.parse(dateText);
 
                 Needs need = new Needs(desc, cost, dueDate);
                 profile.addNeed(need);
@@ -175,7 +151,6 @@ public class SwingUI extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(dialog, "Need added successfully!");
                 refreshAction.run();
                 dialog.dispose();
-
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(dialog, "Please enter a valid number for cost.");
             } catch (java.time.format.DateTimeParseException ex) {
@@ -183,78 +158,40 @@ public class SwingUI extends JFrame implements ActionListener {
             }
         });
 
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
-    }
-    
+    } // End of method showAddNeedDialog
+
+
+    // -------------------------------------------------------------------------
+    // WANTS DIALOG
+    // -------------------------------------------------------------------------
+
+    /**
+     * Displays a modal dialog allowing the user to add a new "Want".
+     *
+     * @param refreshAction callback to refresh the UI after saving
+     */
     public void showAddWantDialog(Runnable refreshAction) {
-        JDialog dialog = new JDialog(this, "Add Want", true);
-        dialog.getContentPane().setBackground(UITheme.BACKGROUND);
-        dialog.setLayout(new BorderLayout(10, 10));
-        dialog.setSize(360, 640);
-        dialog.setResizable(false);
-        dialog.setLocationRelativeTo(this);
+        JDialog dialog = createBaseDialog("Add Want");
 
         JLabel header = new JLabel("Add a New Want", SwingConstants.CENTER);
         header.setFont(UITheme.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         dialog.add(header, BorderLayout.NORTH);
 
-        JPanel inputPanel = new JPanel();
-        inputPanel.setOpaque(false);
-        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
-
-        JLabel descLabel = new JLabel("Description:");
-        descLabel.setFont(UITheme.BODY_FONT);
-        JTextField descField = new JTextField();
-        descField.setFont(UITheme.BODY_FONT);
-        descField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        JLabel costLabel = new JLabel("Cost ($):");
-        costLabel.setFont(UITheme.BODY_FONT);
-        JTextField costField = new JTextField();
-        costField.setFont(UITheme.BODY_FONT);
-        costField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        JLabel dateLabel = new JLabel("Target Date (YYYY-MM-DD):");
-        dateLabel.setFont(UITheme.BODY_FONT);
-        JTextField dateField = new JTextField();
-        dateField.setFont(UITheme.BODY_FONT);
-        dateField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
-        inputPanel.add(descLabel);
-        inputPanel.add(descField);
-        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        inputPanel.add(costLabel);
-        inputPanel.add(costField);
-        inputPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        inputPanel.add(dateLabel);
-        inputPanel.add(dateField);
-
+        JPanel inputPanel = buildInputForm(
+                "Description:",
+                "Cost ($):",
+                "Target Date (YYYY-MM-DD):"
+        );
         dialog.add(inputPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
-        buttonPanel.setOpaque(false);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 25, 20, 25));
+        JTextField descField = (JTextField) inputPanel.getComponent(1);
+        JTextField costField = (JTextField) inputPanel.getComponent(4);
+        JTextField dateField = (JTextField) inputPanel.getComponent(7);
 
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setFont(UITheme.BODY_FONT);
-        cancelButton.setBackground(UITheme.ACCENT);
-        cancelButton.setForeground(Color.BLACK);
-        cancelButton.setFocusPainted(false);
-
-        JButton saveButton = new JButton("Save Want");
-        saveButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 15f));
-        saveButton.setBackground(UITheme.PRIMARY);
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFocusPainted(false);
-
-        buttonPanel.add(cancelButton);
-        buttonPanel.add(saveButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-        saveButton.addActionListener(e -> {
+        JPanel buttonPanel = buildFormButtons(dialog, () -> {
             String desc = descField.getText().trim();
             String costText = costField.getText().trim();
             String dateText = dateField.getText().trim();
@@ -266,9 +203,9 @@ public class SwingUI extends JFrame implements ActionListener {
 
             try {
                 double cost = Double.parseDouble(costText);
-                java.time.LocalDate dueDate = java.time.LocalDate.parse(dateText);
+                LocalDate targetDate = LocalDate.parse(dateText);
 
-                Wants want = new Wants(desc, cost, dueDate);
+                Wants want = new Wants(desc, cost, targetDate);
                 profile.addWant(want);
 
                 JOptionPane.showMessageDialog(dialog, "Want added successfully!");
@@ -281,21 +218,113 @@ public class SwingUI extends JFrame implements ActionListener {
             }
         });
 
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
-    }
+    } // End of method showAddWantDialog
 
+
+    // -------------------------------------------------------------------------
+    // UI CONSTRUCTION HELPERS
+    // -------------------------------------------------------------------------
+
+    /**
+     * Builds a mobile-style modal dialog window for add/edit forms.
+     *
+     * @param title the dialog title
+     * @return a configured {@link JDialog}
+     */
+    private JDialog createBaseDialog(String title) {
+        JDialog dialog = new JDialog(this, title, true);
+        dialog.getContentPane().setBackground(UITheme.BACKGROUND);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(360, 640);
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+        return dialog;
+    } // End of method createBaseDialog
+
+
+    /**
+     * Builds a form panel with three labeled text fields.
+     *
+     * @param label1 label for the first field
+     * @param label2 label for the second field
+     * @param label3 label for the third field
+     * @return a vertical {@link JPanel} containing labels and fields
+     */
+    private JPanel buildInputForm(String label1, String label2, String label3) {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+
+        for (String label : new String[]{label1, label2, label3}) {
+            JLabel lbl = new JLabel(label);
+            lbl.setFont(UITheme.BODY_FONT);
+            JTextField field = new JTextField();
+            field.setFont(UITheme.BODY_FONT);
+            field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+            panel.add(lbl);
+            panel.add(field);
+            panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
+
+        return panel;
+    } // End of method buildInputForm
+
+
+    /**
+     * Builds a button bar for dialogs with Cancel and Save actions.
+     *
+     * @param dialog       parent dialog reference
+     * @param saveRunnable action to perform on save
+     * @return a {@link JPanel} containing the buttons
+     */
+    private JPanel buildFormButtons(JDialog dialog, Runnable saveRunnable) {
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 25, 20, 25));
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.setFont(UITheme.BODY_FONT);
+        cancelButton.setBackground(UITheme.ACCENT);
+        cancelButton.setForeground(Color.BLACK);
+        cancelButton.setFocusPainted(false);
+
+        JButton saveButton = new JButton("Save");
+        saveButton.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 15f));
+        saveButton.setBackground(UITheme.PRIMARY);
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+        saveButton.addActionListener(e -> saveRunnable.run());
+
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+
+        return buttonPanel;
+    } // End of method buildFormButtons
+
+
+    // -------------------------------------------------------------------------
+    // NAVIGATION SHORTCUTS
+    // -------------------------------------------------------------------------
+
+    /** Opens the dashboard (Home page). */
     public void showDashMenu() {
         new HomeUI(profile, this);
-    }
+    } // End of method showDashMenu
 
- // --- Placeholder methods for upcoming features ---
 
+    /** Opens the Savings section (placeholder). */
     public void showSavingsMenu() {
         JOptionPane.showMessageDialog(this, "Savings screen coming soon!");
-    }
+    } // End of method showSavingsMenu
 
+
+    /** Opens the Settings menu (placeholder). */
     public void showSettingsMenu() {
         JOptionPane.showMessageDialog(this, "Settings screen coming soon!");
-    }
-
-}
+    } // End of method showSettingsMenu
+} // End of class SwingUI
