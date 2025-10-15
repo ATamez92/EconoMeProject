@@ -7,22 +7,41 @@ import econome.model.Profile;
 import econome.model.Wants;
 
 /**
- * Screen for displaying and managing the user's list of Wants.
- * Uses SharedUI for consistent layout and styling.
+ * Represents the Wants screen in the EconoMe application.
+ * <p>
+ * Displays and manages the user’s list of discretionary expenses ("Wants"),
+ * allowing users to add, mark complete, or delete items.
+ * </p>
+ *
+ * <h3>Responsibilities:</h3>
+ * <ul>
+ *   <li>Display all recorded Want items as styled cards.</li>
+ *   <li>Allow users to add, mark complete, or delete Wants.</li>
+ *   <li>Persist all changes to the active user profile.</li>
+ * </ul>
  */
 public class WantsUI {
-
+    // --- Instance Variables ---
     private final Profile profile;
     private final SwingUI parent; // Reference to main dashboard
 
+    /**
+     * Constructs the Wants screen for the given user profile.
+     *
+     * @param profile the current user’s financial profile
+     * @param parent  reference to the main application window
+     */
     public WantsUI(Profile profile, SwingUI parent) {
         this.profile = profile;
         this.parent = parent;
         buildScreen();
-    }
-
+    } // End of constructor
+    
+    /**
+     * Builds and displays the main Wants management screen.
+     */
     private void buildScreen() {
-        // 🪟 Create base mobile-sized dialog
+        // Create base mobile-sized dialog
         JDialog dialog = SharedUI.createBaseScreen("Your Wants", parent);
 
         // --- Content area for listing wants ---
@@ -56,18 +75,27 @@ public class WantsUI {
         // --- Load Wants ---
         refreshWantsContent(dialog, contentPanel);
         dialog.setVisible(true);
-    }
+    } // End of method
 
+    /**
+     * Refreshes and rebuilds the list of Wants displayed on screen.
+     * Called whenever a Want is added, updated, or deleted.
+     *
+     * @param dialog        the parent dialog window
+     * @param contentPanel  the main content area container
+     */
     private void refreshWantsContent(JDialog dialog, JPanel contentPanel) {
         contentPanel.removeAll();
 
         List<Wants> wants = profile.getWantsList();
 
+        // --- Empty State ---
         if (wants.isEmpty()) {
             JLabel emptyLabel = new JLabel("(No wants yet)", SwingConstants.CENTER);
             emptyLabel.setFont(UITheme.BODY_FONT);
             contentPanel.add(emptyLabel, BorderLayout.CENTER);
         } else {
+            // --- Wants List ---
             JPanel listPanel = new JPanel(new GridBagLayout());
             listPanel.setOpaque(false);
 
@@ -80,7 +108,7 @@ public class WantsUI {
 
             int cardHeight = 85;
 
-            for (Wants w : wants) {
+            for (Wants wantItem : wants) {
                 // --- Card wrapper ---
                 JPanel card = SharedUI.createCardPanel(cardHeight);
                 card.setLayout(new BorderLayout());
@@ -93,13 +121,13 @@ public class WantsUI {
                 textPanel.setOpaque(false);
                 textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
 
-                JLabel desc = new JLabel("• " + w.getDescription());
+                JLabel desc = new JLabel("• " + wantItem.getDescription());
                 desc.setFont(UITheme.BODY_FONT.deriveFont(Font.BOLD, 13f));
 
-                JLabel cost = new JLabel("$" + String.format("%.2f", w.getCost()));
+                JLabel cost = new JLabel("$" + String.format("%.2f", wantItem.getCost()));
                 cost.setFont(UITheme.BODY_FONT);
 
-                JLabel date = new JLabel("Target: " + w.getDueDate());
+                JLabel date = new JLabel("Target: " + wantItem.getDueDate());
                 date.setFont(UITheme.BODY_FONT.deriveFont(11f));
                 date.setForeground(Color.DARK_GRAY);
 
@@ -131,23 +159,25 @@ public class WantsUI {
 
                 Dimension buttonSize = new Dimension(110, 29);
 
+                // Complete Button
                 JButton completeBtn = SharedUI.createRoundedButton(
-                        w.isComplete() ? "✓ Done" : "Mark Complete",
-                        w.isComplete() ? new Color(180, 180, 180) : UITheme.PRIMARY_LIGHT,
+                		wantItem.isComplete() ? "✓ Done" : "Mark Complete",
+                		wantItem.isComplete() ? new Color(180, 180, 180) : UITheme.PRIMARY_LIGHT,
                         Color.WHITE
                 );
                 completeBtn.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 11f));
-                completeBtn.setEnabled(!w.isComplete());
+                completeBtn.setEnabled(!wantItem.isComplete());
                 completeBtn.setFocusPainted(false);
                 completeBtn.setPreferredSize(buttonSize);
                 completeBtn.setMaximumSize(buttonSize);
                 completeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 completeBtn.addActionListener(e -> {
-                    w.markComplete();
+                	wantItem.markComplete();
                     profile.saveProfile(); // ✅ persist after marking complete
                     refreshWantsContent(dialog, contentPanel);
                 });
 
+                // Delete Button
                 JButton deleteBtn = SharedUI.createRoundedButton(
                         "🗑 Delete",
                         new Color(200, 80, 80),
@@ -161,17 +191,18 @@ public class WantsUI {
                 deleteBtn.addActionListener(e -> {
                     int confirm = JOptionPane.showConfirmDialog(
                             dialog,
-                            "Delete \"" + w.getDescription() + "\"?",
+                            "Delete \"" + wantItem.getDescription() + "\"?",
                             "Confirm Delete",
                             JOptionPane.YES_NO_OPTION,
                             JOptionPane.WARNING_MESSAGE
                     );
                     if (confirm == JOptionPane.YES_OPTION) {
-                        profile.removeWant(w);
+                        profile.removeWant(wantItem);
                         refreshWantsContent(dialog, contentPanel);
                     }
                 });
 
+                // Add both buttons with spacing
                 buttonsPanel.add(completeBtn);
                 buttonsPanel.add(Box.createRigidArea(new Dimension(0, 6)));
                 buttonsPanel.add(deleteBtn);
@@ -188,23 +219,20 @@ public class WantsUI {
 
                 gbc.gridy = listPanel.getComponentCount();
                 listPanel.add(card, gbc);
-            }
+            } // End of for-loop
 
             gbc.weighty = 1;
             listPanel.add(Box.createVerticalGlue(), gbc);
 
+            // --- Scroll Pane Setup ---
             JScrollPane scroll = new JScrollPane(listPanel);
             scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-
-            // ❗ Key lines that fix the scrollbar placement:
             scroll.setBorder(BorderFactory.createEmptyBorder()); 
             scroll.setOpaque(true);
             scroll.getViewport().setOpaque(true);
             scroll.setBackground(UITheme.BACKGROUND);
             scroll.getViewport().setBackground(UITheme.BACKGROUND);
-
-            // match the TasksUI behavior
             scroll.getVerticalScrollBar().setUnitIncrement(16);
             scroll.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
 
@@ -214,5 +242,5 @@ public class WantsUI {
 
         contentPanel.revalidate();
         contentPanel.repaint();
-    }
-}
+    } // End of method refreshWantsContent
+} // End of class WantsUI

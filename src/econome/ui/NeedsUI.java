@@ -171,6 +171,8 @@ public class NeedsUI {
                 completeButton.setEnabled(!needItem.isComplete());
                 completeButton.setFocusPainted(false);
                 completeButton.setPreferredSize(buttonSize);
+                completeButton.setMinimumSize(buttonSize);
+                completeButton.setMaximumSize(buttonSize);
                 completeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
                 completeButton.addActionListener(e -> {
                     needItem.markComplete();
@@ -187,6 +189,7 @@ public class NeedsUI {
                 deleteButton.setFont(UITheme.BODY_FONT.deriveFont(Font.PLAIN, 11f));
                 deleteButton.setFocusPainted(false);
                 deleteButton.setPreferredSize(buttonSize);
+                deleteButton.setMaximumSize(buttonSize);
                 deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
                 deleteButton.addActionListener(e -> {
                     int confirm = JOptionPane.showConfirmDialog(
